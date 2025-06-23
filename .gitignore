@@ -1,0 +1,51 @@
+# ======================
+# SECURITY 
+# ======================
+.env
+.env.*
+!.env.example  
+
+# ======================
+# OS METADATA
+# ======================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ======================
+# IDE CONFIGURATIONS
+# ======================
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# ======================
+# DEPENDENCIES
+# ======================
+# Backend (Java)
+backend/target/
+backend/.settings/
+backend/.project
+backend/.classpath
+
+# Frontend (React)
+frontend/node_modules/
+frontend/.pnp
+frontend/.pnp.js
+
+# ======================
+# BUILD OUTPUTS
+# ======================
+frontend/build/
+frontend/dist/
+backend/dependency-reduced-pom.xml
+
+# ======================
+# LOGS & TEMP FILES
+# ======================
+*.log
+*.tmp
+*.bak
+*.swp
