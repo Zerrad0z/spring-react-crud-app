@@ -5,11 +5,13 @@ import com.example.crud_app.dto.CategoryDTO;
 import com.example.crud_app.dto.CategoryUpdateDTO;
 import com.example.crud_app.dto.CategoryWithProductsDTO;
 import com.example.crud_app.entity.Category;
+import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 import java.util.List;
 
+@Mapper(componentModel = "spring", uses = ProductMapper.class)
 public interface CategoryMapper {
 
     CategoryDTO toDTO(Category category);

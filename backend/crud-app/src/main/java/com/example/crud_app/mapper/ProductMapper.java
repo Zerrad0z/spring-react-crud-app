@@ -4,11 +4,13 @@ import com.example.crud_app.dto.ProductCreateDTO;
 import com.example.crud_app.dto.ProductDTO;
 import com.example.crud_app.dto.ProductUpdateDTO;
 import com.example.crud_app.entity.Product;
+import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 import java.util.List;
 
+@Mapper(componentModel = "spring")
 public interface ProductMapper {
 
     @Mapping(target = "categoryId", source = "category.id")
