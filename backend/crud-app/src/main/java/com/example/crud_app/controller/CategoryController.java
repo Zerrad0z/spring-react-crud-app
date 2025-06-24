@@ -4,7 +4,6 @@ import com.example.crud_app.dto.CategoryCreateDTO;
 import com.example.crud_app.dto.CategoryDTO;
 import com.example.crud_app.dto.CategoryUpdateDTO;
 import com.example.crud_app.dto.CategoryWithProductsDTO;
-import com.example.crud_app.mapper.CategoryMapper;
 import com.example.crud_app.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

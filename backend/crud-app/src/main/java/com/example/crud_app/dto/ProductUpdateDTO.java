@@ -8,6 +8,5 @@ import java.math.BigDecimal;
 public record ProductUpdateDTO(
         String name,
         BigDecimal price,
-        String imageUrl,
         Long categoryId
 ) {}
