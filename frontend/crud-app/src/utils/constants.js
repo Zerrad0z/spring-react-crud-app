@@ -23,6 +23,6 @@ export const USER_ROLES = {
 
 //Local Storage Keys (this is just for dev;
 //  ill change it later to use sessions with jwt)
-export const STOTAGE_KEYS = {
+export const STORAGE_KEYS = {
     USER: 'user'
 }
