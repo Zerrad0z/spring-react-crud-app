@@ -21,7 +21,6 @@ const Header = () => {
     <Navbar bg="dark" variant="dark" expand="lg">
       <Container>
         <Navbar.Brand as={Link} to="/">
-          <i className="bi bi-box-seam me-2"></i>
           Product Manager
         </Navbar.Brand>
         

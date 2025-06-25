@@ -33,7 +33,6 @@ api.interceptors.response.use(
     (error) => {
         console.error('API Error:', error.response?.data || error.message);
 
-        // Fixed: Changed from this.status to status
         if(error.response?.status === 401){
             console.log('Unauthorized access - redirecting to login');
             // Handle unauthorized access (redirect to login, clear tokens, etc.)
