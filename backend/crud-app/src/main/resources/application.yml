@@ -2,10 +2,14 @@ spring:
   profiles:
     active: dev
 
-jpa:
-  show-sql: true
-  hibernate:
-    ddl-auto: update
+  jwt:
+    secret: ${JWT_SECRET:mySecretKeyForJwtTokensMustBeAtLeast32Characters}
+    expirationMs: 86400000
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
 
 ---
 # Development Profile (H2)

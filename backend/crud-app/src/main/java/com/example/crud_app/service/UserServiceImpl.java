@@ -1,16 +1,15 @@
 package com.example.crud_app.service;
 
 import com.example.crud_app.dto.CreateUserDTO;
-import com.example.crud_app.dto.LoginDTO;
 import com.example.crud_app.dto.UpdateUserDTO;
 import com.example.crud_app.dto.UserDTO;
 import com.example.crud_app.entity.User;
-import com.example.crud_app.exception.InvalidCredentialsException;
 import com.example.crud_app.exception.UserAlreadyExistsException;
 import com.example.crud_app.exception.UserNotFoundException;
 import com.example.crud_app.mapper.UserMapper;
 import com.example.crud_app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +23,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-    //private final PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public List<UserDTO> getAllUsers(){
@@ -47,11 +46,19 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDTO createUser(CreateUserDTO createUserDTO){
         if (userRepository.existsByUsername(createUserDTO.username())){
-            throw  new UserAlreadyExistsException("User exists with username" + createUserDTO.username());
+            throw new UserAlreadyExistsException("User exists with username: " + createUserDTO.username());
         }
+
+        // Map DTO to entity
         User user = userMapper.toEntity(createUserDTO);
-        User saveUser = userRepository.save(user);
-        return userMapper.toDTO(saveUser);
+
+        // Encode the password before saving
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        // Save user with encoded password
+        User savedUser = userRepository.save(user);
+
+        return userMapper.toDTO(savedUser);
     }
 
     /*
@@ -82,17 +89,6 @@ public class UserServiceImpl implements UserService {
             throw new UserNotFoundException("User not found with id"+ id);
         }
         userRepository.deleteById(id);
-    }
-
-    /*
-     * Loign
-     */
-    @Override
-    public UserDTO login(LoginDTO loginDTO){
-        return userRepository.findByUsername(loginDTO.username())
-                .filter(user -> user.getPassword().equals(loginDTO.password()))
-                .map(userMapper::toDTO)
-                .orElseThrow(() -> new InvalidCredentialsException("invalid credentials"));
     }
 
     @Override

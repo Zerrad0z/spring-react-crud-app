@@ -1,7 +1,6 @@
 package com.example.crud_app.service;
 
 import com.example.crud_app.dto.CreateUserDTO;
-import com.example.crud_app.dto.LoginDTO;
 import com.example.crud_app.dto.UpdateUserDTO;
 import com.example.crud_app.dto.UserDTO;
 import com.example.crud_app.entity.User;
@@ -29,10 +28,6 @@ public interface UserService {
      */
     void deleteUser(Long id);
 
-    /*
-     * Loign
-     */
-    UserDTO login(LoginDTO loginDTO);
 
     Optional<User> getUserByUsername(String username);
 }

@@ -1,15 +1,12 @@
 package com.example.crud_app.controller;
 
 import com.example.crud_app.dto.CreateUserDTO;
-import com.example.crud_app.dto.LoginDTO;
 import com.example.crud_app.dto.UpdateUserDTO;
 import com.example.crud_app.dto.UserDTO;
 import com.example.crud_app.entity.User;
 import com.example.crud_app.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.validator.constraints.ParameterScriptAssert;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,17 +20,17 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    public List<UserDTO> getAllUsers(){
+    public List<UserDTO> getAllUsers() {
         return userService.getAllUsers();
     }
 
     @GetMapping("/{id}")
-    public UserDTO getUserById(@PathVariable Long id){
+    public UserDTO getUserById(@PathVariable Long id) {
         return userService.getUserById(id);
     }
 
     @GetMapping("/username/{username}")
-    public Optional<User> getUserByUsername(@PathVariable String username){
+    public Optional<User> getUserByUsername(@PathVariable String username) {
         return userService.getUserByUsername(username);
     }
 
@@ -42,7 +39,7 @@ public class UserController {
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public UserDTO createUser(@RequestBody CreateUserDTO createUserDTO){
+    public UserDTO createUser(@RequestBody CreateUserDTO createUserDTO) {
         return userService.createUser(createUserDTO);
     }
 
@@ -52,7 +49,7 @@ public class UserController {
      */
     @PutMapping("/{id}")
     public UserDTO updateUser(@PathVariable Long id,
-                              @RequestBody UpdateUserDTO updateUserDTO){
+                              @RequestBody UpdateUserDTO updateUserDTO) {
         return userService.updateUser(id, updateUserDTO);
     }
 
@@ -62,15 +59,7 @@ public class UserController {
      */
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteUser(@PathVariable Long id){
+    public void deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
-    }
-
-    /*
-     * Loign
-     */
-    @PostMapping("/login")
-    public UserDTO login(@RequestBody LoginDTO loginDTO){
-        return userService.login(loginDTO);
     }
 }
