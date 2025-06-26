@@ -44,4 +44,10 @@ public interface CategoryService {
      */
     @Transactional
     void deleteCategory(Long id);
+
+    /*
+     * Flexible search
+     */
+    Page<CategoryDTO> searchProduct(String name, Pageable pageable);
+
 }

@@ -8,6 +8,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+
 public interface ProductService {
 
 
@@ -45,4 +47,9 @@ public interface ProductService {
      */
     @Transactional
     void deleteProduct(Long id);
+
+    /*
+     * Flexible search
+     */
+    Page<ProductDTO> searchProduct(String name, BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable);
 }

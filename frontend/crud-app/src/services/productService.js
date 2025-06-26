@@ -62,6 +62,9 @@ export const productService = {
     }
   },
 
+  /**
+   *  Get product by category
+   */
    async getProductsByCategory(categoryId, params = {}) {
     try {
       const response = await api.get(`${API_ENDPOINTS.PRODUCTS}/category/${categoryId}`, { params });
@@ -71,5 +74,20 @@ export const productService = {
     }
   },
 
+  /**
+   * Search product
+   */
+  async searchProduct(name, params = {}){
+    try{
+      const searchParams = {...params, name};
+      const response = await api.get(`${API_ENDPOINTS.PRODUCTS}/seach`, {params: searchParams});
+      return response.data;
+    } catch (error) {
+      if(error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw new Error('Failed to search products');
+    }
+  }
 
 }

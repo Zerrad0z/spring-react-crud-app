@@ -19,7 +19,7 @@ public class Product {
     private Long id;
     @Column(nullable = false)
     private String name;
-    @Column(nullable = false, precision = 5, scale = 2)
+    @Column(nullable = false, precision = 6, scale = 2)
     private BigDecimal price;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)

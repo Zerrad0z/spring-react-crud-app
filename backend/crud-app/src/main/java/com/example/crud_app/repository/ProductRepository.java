@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
+
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
@@ -16,5 +18,15 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("SELECT p FROM Product p WHERE p.name ILIKE %:name%")
     Page<Product> findByNameContainingIgnoreCase(@Param("name") String name,Pageable pageable);
 
+    // flexible search
+    @Query("SELECT p FROM Product p WHERE " +
+            "(:name IS NULL OR p.name ILIKE %:name%) AND " +
+            "(:minPrice IS NULL OR p.price >= :minPrice) AND " +
+            "(:maxPrice IS NULL OR p.price <= :maxPrice)")
+    Page<Product> searchProducts(
+            @Param("name") String name,
+            @Param("minPrice")BigDecimal minPrice,
+            @Param("maxPrice") BigDecimal maxPrice,
+            Pageable pageable);
 
 }

@@ -1,9 +1,6 @@
 package com.example.crud_app.controller;
 
-import com.example.crud_app.dto.CategoryCreateDTO;
-import com.example.crud_app.dto.CategoryDTO;
-import com.example.crud_app.dto.CategoryUpdateDTO;
-import com.example.crud_app.dto.CategoryWithProductsDTO;
+import com.example.crud_app.dto.*;
 import com.example.crud_app.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -11,6 +8,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/v1/categories")
@@ -70,5 +69,15 @@ public class CategoryController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCategory(@PathVariable Long id){
         categoryService.deleteCategory(id);
+    }
+
+    /*
+     * Search a category
+     */
+    @GetMapping("/search")
+    public Page<CategoryDTO> searchCategories(
+            @RequestParam(required = false) String name,
+            Pageable pageable){
+        return categoryService.searchProduct(name,pageable);
     }
 }

@@ -1,9 +1,6 @@
 package com.example.crud_app.service;
 
-import com.example.crud_app.dto.CategoryCreateDTO;
-import com.example.crud_app.dto.CategoryDTO;
-import com.example.crud_app.dto.CategoryUpdateDTO;
-import com.example.crud_app.dto.CategoryWithProductsDTO;
+import com.example.crud_app.dto.*;
 import com.example.crud_app.entity.Category;
 import com.example.crud_app.exception.CategoryNotFoundException;
 import com.example.crud_app.exception.DuplicateCategoryNameException;
@@ -104,5 +101,13 @@ public class CategoryServiceImpl implements CategoryService {
         if (exists) {
             throw new DuplicateCategoryNameException("Category with name'"+ name + "' already exists");
         }
+    }
+
+    /*
+     * Flexible search
+     */
+    @Override
+    public Page<CategoryDTO> searchProduct(String name, Pageable pageable){
+        return categoryRepository.searchCategory(name,pageable ).map(categoryMapper::toDTO);
     }
 }
