@@ -1,54 +1,30 @@
 import axios from 'axios';
-import { API_BASE_URL } from '../utils/constants';
+import { API_BASE_URL,API_ENDPOINTS, STORAGE_KEYS } from '../utils/constants';
 
 const api = axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-        'Content-Type': 'application/json'
-    },
+  baseURL: API_BASE_URL,
+  headers: { 'Content-Type': 'application/json' },
+   withCredentials: true 
 });
 
-// Request interceptor
-api.interceptors.request.use(
-    (config) => {
-        // JWT token 
-        // const token = localStorage.getItem('token');
-        // if (token) {
-        //     config.headers.Authorization = `Bearer ${token}`;
-        // }
-        
-        console.log(`Making ${config.method?.toUpperCase()} request to ${config.url}`);
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
+// Add JWT token to requests automatically
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
-// Response interceptor
+// Handle authentication errors globally
 api.interceptors.response.use(
-    (response) => {
-        return response;
-    },
-    (error) => {
-        console.error('API Error:', error.response?.data || error.message);
-
-        if(error.response?.status === 401){
-            console.log('Unauthorized access - redirecting to login');
-            // Handle unauthorized access (redirect to login, clear tokens, etc.)
-            // window.location.href = '/login';
-        }
-
-        if(error.response?.status === 403){
-            console.log('Access forbidden');
-        }
-
-        if(error.response?.status === 500){
-            console.log('Server error - please try again later');
-        }
-
-        return Promise.reject(error);
+  response => response,
+  error => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem(STORAGE_KEYS.TOKEN);
+      localStorage.removeItem(STORAGE_KEYS.USER);
+      window.location.href = '/login';
     }
+    return Promise.reject(error);
+  }
 );
 
 export default api;

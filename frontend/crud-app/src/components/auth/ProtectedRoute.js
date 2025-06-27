@@ -1,28 +1,18 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import Loading from '../common/Loading';
+import { isAuthenticated, isAdmin } from '../../services/authService';
 
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading, user } = useAuth();
-
-  // Debug logging
-  console.log('ProtectedRoute Debug:', {
-    loading,
-    isAuthenticated: isAuthenticated(),
-    user
-  });
-
-  if (loading) {
-    return <Loading />;
-  }
-
+const ProtectedRoute = ({ children, requireAdmin = false }) => {
+  // First check if user is authenticated
   if (!isAuthenticated()) {
-    console.log('Not authenticated, redirecting to login');
     return <Navigate to="/login" replace />;
   }
-
-  console.log('User authenticated, showing protected content');
+  
+  // If admin access is required, check admin status
+  if (requireAdmin && !isAdmin()) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+  
   return children;
 };
 

@@ -1,71 +1,45 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { STORAGE_KEYS, USER_ROLES } from '../utils/constants';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { login as apiLogin, logout as apiLogout, getCurrentUser, isAuthenticated } from '../services/authService';
 
 const AuthContext = createContext();
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+export function AuthProvider({ children }) {
+  const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Load user from localStorage on app start
   useEffect(() => {
-    const savedUser = localStorage.getItem(STORAGE_KEYS.USER);
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (error) {
-        console.error('Error parsing saved user:', error);
-        localStorage.removeItem(STORAGE_KEYS.USER);
-      }
+    const user = getCurrentUser();
+    if (user) {
+      setCurrentUser(user);
     }
     setLoading(false);
   }, []);
 
-  const login = (userData) => {
-    setUser(userData);
-    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
+  const login = async (credentials) => {
+    const userData = await apiLogin(credentials);
+    setCurrentUser({
+      username: userData.username
+    });
+    return userData;
   };
 
   const logout = () => {
-    setUser(null);
-    localStorage.removeItem(STORAGE_KEYS.USER);
+    apiLogout();
+    setCurrentUser(null);
   };
 
-  const isAuthenticated = () => {
-    const result = user !== null;
-    console.log('isAuthenticated check:', { user, result });
-    return result;
-  };
-
-  const isAdmin = () => {
-    return user?.role === USER_ROLES.ADMIN;
-  };
-
-  const isUser = () => {
-    return user?.role === USER_ROLES.USER;
-  };
-
-  const value = {
-    user,
+  const authValue = {
+    currentUser,
     login,
     logout,
-    isAuthenticated,
-    isAdmin,
-    isUser,
-    loading
+    isAuthenticated: isAuthenticated()
   };
 
   return (
-    <AuthContext.Provider value={value}>
-      {children}
+    <AuthContext.Provider value={authValue}>
+      {!loading && children}
     </AuthContext.Provider>
   );
-};
+}
+
+export const useAuth = () => useContext(AuthContext);

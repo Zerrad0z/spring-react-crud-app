@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Card, Form, Button, Table, Row, Col, Modal, ButtonGroup, InputGroup } from 'react-bootstrap';
 import { productService } from '../services/productService';
 import { categoryService } from '../services/categoryService';
+import { isAdmin } from '../services/authService';
 
 const Products = () => {
   const [products, setProducts] = useState([]);
@@ -12,6 +13,23 @@ const Products = () => {
   const [price, setPrice] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Role-based access control
+  const [userIsAdmin, setUserIsAdmin] = useState(false);
+  
+  useEffect(() => {
+    // Check admin status when component mounts and update state
+    const checkAdminStatus = () => {
+      try {
+        setUserIsAdmin(isAdmin());
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        setUserIsAdmin(false);
+      }
+    };
+    
+    checkAdminStatus();
+  }, []);
   
   // Edit modal state
   const [showEditModal, setShowEditModal] = useState(false);
@@ -73,7 +91,7 @@ const Products = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name.trim() || !price || !categoryId) return;
+    if (!name.trim() || !price || !categoryId || !userIsAdmin) return;
 
     try {
       const newProduct = await productService.createProduct({
@@ -106,6 +124,7 @@ const Products = () => {
   };
 
   const handleEdit = (product) => {
+    if (!userIsAdmin) return;
     setEditingProduct(product);
     setEditName(product.name);
     setEditPrice(product.price.toString());
@@ -115,7 +134,7 @@ const Products = () => {
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-    if (!editName.trim() || !editPrice || !editCategoryId) return;
+    if (!editName.trim() || !editPrice || !editCategoryId || !userIsAdmin) return;
 
     try {
       const updatedProduct = await productService.updateProduct(editingProduct.id, {
@@ -156,12 +175,13 @@ const Products = () => {
   };
 
   const handleDeleteConfirm = (product) => {
+    if (!userIsAdmin) return;
     setProductToDelete(product);
     setShowDeleteModal(true);
   };
 
   const handleDelete = async () => {
-    if (!productToDelete) return;
+    if (!productToDelete || !userIsAdmin) return;
 
     try {
       await productService.deleteProduct(productToDelete.id);
@@ -218,54 +238,56 @@ const Products = () => {
         </Card.Body>
       </Card>
       
-      {/* Add Product Form */}
-      <Card className="mb-4">
-        <Card.Body>
-          <Form onSubmit={handleSubmit}>
-            <Row>
-              <Col md={3}>
-                <Form.Control
-                  type="text"
-                  placeholder="Product name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </Col>
-              <Col md={2}>
-                <Form.Control
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="Price"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  required
-                />
-              </Col>
-              <Col md={3}>
-                <Form.Select
-                  value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
-                  required
-                >
-                  <option value="">Select Category</option>
-                  {categories.map(category => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Col>
-              <Col md={2}>
-                <Button type="submit" variant="primary">
-                  Add Product
-                </Button>
-              </Col>
-            </Row>
-          </Form>
-        </Card.Body>
-      </Card>
+      {/* Add Product Form - Only show for Admin */}
+      {userIsAdmin && (
+        <Card className="mb-4">
+          <Card.Body>
+            <Form onSubmit={handleSubmit}>
+              <Row>
+                <Col md={3}>
+                  <Form.Control
+                    type="text"
+                    placeholder="Product name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
+                </Col>
+                <Col md={2}>
+                  <Form.Control
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="Price"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    required
+                  />
+                </Col>
+                <Col md={3}>
+                  <Form.Select
+                    value={categoryId}
+                    onChange={(e) => setCategoryId(e.target.value)}
+                    required
+                  >
+                    <option value="">Select Category</option>
+                    {categories.map(category => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Col>
+                <Col md={2}>
+                  <Button type="submit" variant="primary">
+                    Add Product
+                  </Button>
+                </Col>
+              </Row>
+            </Form>
+          </Card.Body>
+        </Card>
+      )}
 
       {/* Products Table */}
       <Card>
@@ -277,13 +299,13 @@ const Products = () => {
                 <th>Name</th>
                 <th>Price</th>
                 <th>Category</th>
-                <th>Actions</th>
+                {userIsAdmin && <th>Actions</th>}
               </tr>
             </thead>
             <tbody>
               {filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center text-muted">
+                  <td colSpan={userIsAdmin ? 5 : 4} className="text-center text-muted">
                     {searchTerm ? 'No matching products found' : 'No products found'}
                   </td>
                 </tr>
@@ -294,22 +316,24 @@ const Products = () => {
                     <td><strong>{product.name}</strong></td>
                     <td className="text-success">{formatPrice(product.price)}</td>
                     <td className="text-muted">{product.categoryName || '-'}</td>
-                    <td>
-                      <ButtonGroup size="sm">
-                        <Button 
-                          variant="outline-primary" 
-                          onClick={() => handleEdit(product)}
-                        >
-                          Edit
-                        </Button>
-                        <Button 
-                          variant="outline-danger" 
-                          onClick={() => handleDeleteConfirm(product)}
-                        >
-                          Delete
-                        </Button>
-                      </ButtonGroup>
-                    </td>
+                    {userIsAdmin && (
+                      <td>
+                        <ButtonGroup size="sm">
+                          <Button 
+                            variant="outline-primary" 
+                            onClick={() => handleEdit(product)}
+                          >
+                            Edit
+                          </Button>
+                          <Button 
+                            variant="outline-danger" 
+                            onClick={() => handleDeleteConfirm(product)}
+                          >
+                            Delete
+                          </Button>
+                        </ButtonGroup>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -318,77 +342,81 @@ const Products = () => {
         </Card.Body>
       </Card>
 
-      {/* Edit Modal */}
-      <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Edit Product</Modal.Title>
-        </Modal.Header>
-        <Form onSubmit={handleEditSubmit}>
+      {/* Edit Modal - Only for Admin */}
+      {userIsAdmin && (
+        <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Edit Product</Modal.Title>
+          </Modal.Header>
+          <Form onSubmit={handleEditSubmit}>
+            <Modal.Body>
+              <Form.Group className="mb-3">
+                <Form.Label>Product Name</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  required
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Price</Form.Label>
+                <Form.Control
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={editPrice}
+                  onChange={(e) => setEditPrice(e.target.value)}
+                  required
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Category</Form.Label>
+                <Form.Select
+                  value={editCategoryId}
+                  onChange={(e) => setEditCategoryId(e.target.value)}
+                  required
+                >
+                  <option value="">Select Category</option>
+                  {categories.map(category => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+                Cancel
+              </Button>
+              <Button variant="primary" type="submit">
+                Update Product
+              </Button>
+            </Modal.Footer>
+          </Form>
+        </Modal>
+      )}
+
+      {/* Delete Confirmation Modal - Only for Admin */}
+      {userIsAdmin && (
+        <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Confirm Delete</Modal.Title>
+          </Modal.Header>
           <Modal.Body>
-            <Form.Group className="mb-3">
-              <Form.Label>Product Name</Form.Label>
-              <Form.Control
-                type="text"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                required
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Price</Form.Label>
-              <Form.Control
-                type="number"
-                step="0.01"
-                min="0"
-                value={editPrice}
-                onChange={(e) => setEditPrice(e.target.value)}
-                required
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Category</Form.Label>
-              <Form.Select
-                value={editCategoryId}
-                onChange={(e) => setEditCategoryId(e.target.value)}
-                required
-              >
-                <option value="">Select Category</option>
-                {categories.map(category => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
+            Are you sure you want to delete the product "{productToDelete?.name}"? This action cannot be undone.
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+            <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit">
-              Update Product
+            <Button variant="danger" onClick={handleDelete}>
+              Delete Product
             </Button>
           </Modal.Footer>
-        </Form>
-      </Modal>
-
-      {/* Delete Confirmation Modal */}
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Confirm Delete</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Are you sure you want to delete the product "{productToDelete?.name}"? This action cannot be undone.
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            Delete Product
-          </Button>
-        </Modal.Footer>
-      </Modal>
+        </Modal>
+      )}
     </Container>
   );
 };

@@ -1,6 +1,9 @@
 package com.example.crud_app.dto;
 
+import com.example.crud_app.enums.Role;
+
 public record AuthResponse(
         String token,
-        String username
+        String username,
+        Role role
 ) {}

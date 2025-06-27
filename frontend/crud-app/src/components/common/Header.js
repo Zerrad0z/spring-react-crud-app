@@ -13,7 +13,7 @@ const Header = () => {
     navigate('/login');
   };
 
-  if (!isAuthenticated()) {
+  if (!isAuthenticated) {
     return null; 
   }
 
@@ -27,10 +27,13 @@ const Header = () => {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <Nav.Link as={Link} to="/">
-              <i className="bi bi-house me-1"></i>
-              Dashboard
-            </Nav.Link>
+            {/* Only show Dashboard link for admin users */}
+            {isAdmin && (
+              <Nav.Link as={Link} to="/">
+                <i className="bi bi-house me-1"></i>
+                Dashboard
+              </Nav.Link>
+            )}
             <Nav.Link as={Link} to="/products">
               <i className="bi bi-box me-1"></i>
               Products
@@ -45,7 +48,7 @@ const Header = () => {
             <Navbar.Text className="me-3">
               <i className="bi bi-person-circle me-1"></i>
               {user?.username} 
-              <span className={`badge ms-2 ${isAdmin() ? 'bg-danger' : 'bg-secondary'}`}>
+              <span className={`badge ms-2 ${isAdmin ? 'bg-danger' : 'bg-secondary'}`}>
                 {user?.role}
               </span>
             </Navbar.Text>
@@ -57,7 +60,7 @@ const Header = () => {
         </Navbar.Collapse>
       </Container>
     </Navbar>
-  );
+    );
 };
 
 export default Header;

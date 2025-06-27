@@ -31,13 +31,13 @@ function App() {
               
               {/* Protected Routes */}
               <Route 
-                path="/" 
+                path="/dashboard" 
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requireAdmin={true}>
                     <Dashboard />
                   </ProtectedRoute>
                 } 
-              />
+               />
               <Route 
                 path="/products" 
                 element={

@@ -9,6 +9,8 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 public class JwtUtils {
@@ -18,6 +20,8 @@ public class JwtUtils {
 
     @Value("${spring.jwt.expirationMs}")
     private int jwtExpirationMs;
+
+    private static final String ROLE_CLAIM = "role";
 
     private SecretKey getSigningKey() {
         // Convert string secret to bytes
@@ -32,12 +36,17 @@ public class JwtUtils {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(String username) {
+    public String generateToken(String username, String role) {
+        // Create claims including role
+        Map<String, Object> claims = new HashMap<>();
+        claims.put(ROLE_CLAIM, role);
+
         return Jwts.builder()
                 .setSubject(username)
+                .addClaims(claims) // Add custom claims
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256) // Changed to HS256
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -50,6 +59,16 @@ public class JwtUtils {
                 .getSubject();
     }
 
+    public String getRoleFromToken(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        return claims.get(ROLE_CLAIM, String.class);
+    }
+
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
@@ -57,12 +76,11 @@ public class JwtUtils {
                     .build()
                     .parseClaimsJws(token);
             return true;
-        } catch (Exception e) {
+        } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
     }
 
-    // Utility method for token validation with username
     public boolean validateToken(String token, String username) {
         try {
             String tokenUsername = getUsernameFromToken(token);

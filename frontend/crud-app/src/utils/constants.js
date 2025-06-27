@@ -3,7 +3,7 @@ export const API_BASE_URL = 'http://localhost:8080/api/v1';
 // API Endpoints
 export const API_ENDPOINTS = {
     // Auth
-    LOGIN: '/users/login',
+    LOGIN: '/auth/login',
 
     // Users
     USERS: '/users',
@@ -21,8 +21,7 @@ export const USER_ROLES = {
     USER: 'USER'
 }
 
-//Local Storage Keys (this is just for dev;
-//  ill change it later to use sessions with jwt)
 export const STORAGE_KEYS = {
-    USER: 'user'
-}
+  USER: 'user_data',
+  TOKEN: 'jwt_token'
+};

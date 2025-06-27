@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Form, Button, Alert, Card, Spinner } from 'react-bootstrap';
 
 const LoginForm = ({ onLogin, loading, error }) => {
@@ -6,6 +6,10 @@ const LoginForm = ({ onLogin, loading, error }) => {
     username: '',
     password: ''
   });
+  
+  // Prevent multiple submissions
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitTimeoutRef = useRef(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -15,12 +19,73 @@ const LoginForm = ({ onLogin, loading, error }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.username.trim() && formData.password.trim()) {
-      onLogin(formData);
+    
+    // Prevent multiple rapid submissions
+    if (isSubmitting || loading) {
+      console.log(' Submission blocked - already in progress');
+      return;
+    }
+
+    // Validate form data
+    const username = formData.username.trim();
+    const password = formData.password.trim();
+    
+    if (!username || !password) {
+      console.log(' Submission blocked - missing credentials');
+      return;
+    }
+
+    console.log(' Form submission started with:', {
+      username,
+      password: password ? '***' : 'MISSING',
+      isSubmitting,
+      loading
+    });
+
+    try {
+      setIsSubmitting(true);
+      
+      // Create a clean credentials object
+      const credentials = {
+        username,
+        password
+      };
+      
+      // Call the onLogin function
+      await onLogin(credentials);
+      
+      // Clear form only after successful login
+      setFormData({
+        username: '',
+        password: ''
+      });
+      
+      console.log('Login successful, form cleared');
+      
+    } catch (error) {
+      console.error(' Login failed:', error);
+      // Don't clear form on error so user can try again
+    } finally {
+      // Add a small delay to prevent rapid resubmissions
+      submitTimeoutRef.current = setTimeout(() => {
+        setIsSubmitting(false);
+      }, 1000);
     }
   };
+
+  // Cleanup timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (submitTimeoutRef.current) {
+        clearTimeout(submitTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const isFormDisabled = loading || isSubmitting;
+  const canSubmit = formData.username.trim() && formData.password.trim() && !isFormDisabled;
 
   return (
     <Card className="shadow">
@@ -51,7 +116,8 @@ const LoginForm = ({ onLogin, loading, error }) => {
               onChange={handleChange}
               placeholder="Enter your username"
               required
-              disabled={loading}
+              disabled={isFormDisabled}
+              autoComplete="username"
             />
           </Form.Group>
 
@@ -67,7 +133,8 @@ const LoginForm = ({ onLogin, loading, error }) => {
               onChange={handleChange}
               placeholder="Enter your password"
               required
-              disabled={loading}
+              disabled={isFormDisabled}
+              autoComplete="current-password"
             />
           </Form.Group>
 
@@ -75,12 +142,12 @@ const LoginForm = ({ onLogin, loading, error }) => {
             variant="primary" 
             type="submit" 
             className="w-100"
-            disabled={loading || !formData.username.trim() || !formData.password.trim()}
+            disabled={!canSubmit}
           >
-            {loading ? (
+            {isFormDisabled ? (
               <>
                 <Spinner animation="border" size="sm" className="me-2" />
-                Signing in...
+                {isSubmitting ? 'Signing in...' : 'Processing...'}
               </>
             ) : (
               <>

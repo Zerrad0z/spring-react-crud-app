@@ -1,31 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col } from 'react-bootstrap';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Form, Button, Container, Card, Alert } from 'react-bootstrap';
 import { useAuth } from '../contexts/AuthContext';
-import { authService } from '../services/authService';
-import LoginForm from '../components/auth/LoginFrom';
 
 const Login = () => {
-  const [loading, setLoading] = useState(false);
+  const [credentials, setCredentials] = useState({
+    username: '',
+    password: ''
+  });
   const [error, setError] = useState('');
-  const { login, isAuthenticated } = useAuth();
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated()) {
-      navigate('/', { replace: true });
-    }
-  }, [isAuthenticated, navigate]);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setCredentials(prev => ({ ...prev, [name]: value }));
+  };
 
-  const handleLogin = async (credentials) => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      const userData = await authService.login(credentials);
-      login(userData);
-      navigate('/', { replace: true });
+      await login(credentials);
+      navigate('/');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -34,16 +34,51 @@ const Login = () => {
   };
 
   return (
-    <Container fluid className="login-page bg-light min-vh-100 d-flex align-items-center">
-      <Row className="w-100 justify-content-center">
-        <Col xs={12} sm={8} md={6} lg={4} xl={3}>
-          <LoginForm 
-            onLogin={handleLogin}
-            loading={loading}
-            error={error}
-          />
-        </Col>
-      </Row>
+    <Container className="d-flex align-items-center justify-content-center" 
+               style={{ minHeight: "100vh" }}>
+      <div className="w-100" style={{ maxWidth: "400px" }}>
+        <Card>
+          <Card.Body>
+            <h2 className="text-center mb-4">Login</h2>
+            {error && <Alert variant="danger">{error}</Alert>}
+            
+            <Form onSubmit={handleSubmit}>
+              <Form.Group className="mb-3" controlId="username">
+                <Form.Label>Username</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="username"
+                  value={credentials.username}
+                  onChange={handleChange}
+                  required
+                  placeholder="Enter username"
+                />
+              </Form.Group>
+
+              <Form.Group className="mb-3" controlId="password">
+                <Form.Label>Password</Form.Label>
+                <Form.Control
+                  type="password"
+                  name="password"
+                  value={credentials.password}
+                  onChange={handleChange}
+                  required
+                  placeholder="Password"
+                />
+              </Form.Group>
+
+              <Button 
+                variant="primary" 
+                type="submit" 
+                className="w-100 mt-3"
+                disabled={loading}
+              >
+                {loading ? 'Logging in...' : 'Login'}
+              </Button>
+            </Form>
+          </Card.Body>
+        </Card>
+      </div>
     </Container>
   );
 };

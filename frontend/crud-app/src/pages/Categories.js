@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Card, Form, Button, Table, Row, Col, Modal, ButtonGroup, InputGroup } from 'react-bootstrap';
 import { categoryService } from '../services/categoryService';
+import { isAdmin } from '../services/authService';
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
@@ -14,6 +15,9 @@ const Categories = () => {
     totalPages: 0,
     currentPage: 0
   });
+
+  // Role-based access control
+  const userIsAdmin = isAdmin();
 
   // Edit modal state
   const [showEditModal, setShowEditModal] = useState(false);
@@ -81,7 +85,7 @@ const Categories = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || !userIsAdmin) return;
 
     try {
       const newCategory = await categoryService.createCategory({
@@ -107,6 +111,7 @@ const Categories = () => {
   };
 
   const handleEdit = (category) => {
+    if (!userIsAdmin) return;
     setEditingCategory(category);
     setEditName(category.name);
     setEditDescription(category.description || '');
@@ -115,7 +120,7 @@ const Categories = () => {
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-    if (!editName.trim()) return;
+    if (!editName.trim() || !userIsAdmin) return;
 
     try {
       const updated = await categoryService.updateCategory(editingCategory.id, {
@@ -148,12 +153,13 @@ const Categories = () => {
   };
 
   const handleDeleteConfirm = (category) => {
+    if (!userIsAdmin) return;
     setCategoryToDelete(category);
     setShowDeleteModal(true);
   };
 
   const handleDelete = async () => {
-    if (!categoryToDelete) return;
+    if (!categoryToDelete || !userIsAdmin) return;
 
     try {
       await categoryService.deleteCategory(categoryToDelete.id);
@@ -198,37 +204,39 @@ const Categories = () => {
         </Card.Body>
       </Card>
 
-      {/* Add Form */}
-      <Card className="mb-4">
-        <Card.Body>
-          <Form onSubmit={handleSubmit}>
-            <Row>
-              <Col md={4}>
-                <Form.Control
-                  type="text"
-                  placeholder="Category name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </Col>
-              <Col md={4}>
-                <Form.Control
-                  type="text"
-                  placeholder="Description (optional)"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                />
-              </Col>
-              <Col md={4}>
-                <Button type="submit" variant="primary">
-                  Add Category
-                </Button>
-              </Col>
-            </Row>
-          </Form>
-        </Card.Body>
-      </Card>
+      {/* Add Form - Only show for Admin */}
+      {userIsAdmin && (
+        <Card className="mb-4">
+          <Card.Body>
+            <Form onSubmit={handleSubmit}>
+              <Row>
+                <Col md={4}>
+                  <Form.Control
+                    type="text"
+                    placeholder="Category name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
+                </Col>
+                <Col md={4}>
+                  <Form.Control
+                    type="text"
+                    placeholder="Description (optional)"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                  />
+                </Col>
+                <Col md={4}>
+                  <Button type="submit" variant="primary">
+                    Add Category
+                  </Button>
+                </Col>
+              </Row>
+            </Form>
+          </Card.Body>
+        </Card>
+      )}
 
       {/* Categories Table */}
       <Card>
@@ -239,13 +247,13 @@ const Categories = () => {
                 <th>ID</th>
                 <th>Name</th>
                 <th>Description</th>
-                <th>Actions</th>
+                {userIsAdmin && <th>Actions</th>}
               </tr>
             </thead>
             <tbody>
               {filteredCategories.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="text-center text-muted">
+                  <td colSpan={userIsAdmin ? 4 : 3} className="text-center text-muted">
                     {searchTerm ? 'No matching categories found' : 'No categories found'}
                   </td>
                 </tr>
@@ -255,12 +263,14 @@ const Categories = () => {
                     <td>{category.id}</td>
                     <td><strong>{category.name}</strong></td>
                     <td className="text-muted">{category.description || '-'}</td>
-                    <td>
-                      <ButtonGroup size="sm">
-                        <Button variant="outline-primary" onClick={() => handleEdit(category)}>Edit</Button>
-                        <Button variant="outline-danger" onClick={() => handleDeleteConfirm(category)}>Delete</Button>
-                      </ButtonGroup>
-                    </td>
+                    {userIsAdmin && (
+                      <td>
+                        <ButtonGroup size="sm">
+                          <Button variant="outline-primary" onClick={() => handleEdit(category)}>Edit</Button>
+                          <Button variant="outline-danger" onClick={() => handleDeleteConfirm(category)}>Delete</Button>
+                        </ButtonGroup>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -269,51 +279,55 @@ const Categories = () => {
         </Card.Body>
       </Card>
 
-      {/* Edit Modal */}
-      <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
-        <Form onSubmit={handleEditSubmit}>
+      {/* Edit Modal - Only for Admin */}
+      {userIsAdmin && (
+        <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
+          <Form onSubmit={handleEditSubmit}>
+            <Modal.Header closeButton>
+              <Modal.Title>Edit Category</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <Form.Group className="mb-3">
+                <Form.Label>Name</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  required
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Description</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                />
+              </Form.Group>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={() => setShowEditModal(false)}>Cancel</Button>
+              <Button variant="primary" type="submit">Save Changes</Button>
+            </Modal.Footer>
+          </Form>
+        </Modal>
+      )}
+
+      {/* Delete Confirmation Modal - Only for Admin */}
+      {userIsAdmin && (
+        <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
           <Modal.Header closeButton>
-            <Modal.Title>Edit Category</Modal.Title>
+            <Modal.Title>Confirm Delete</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <Form.Group className="mb-3">
-              <Form.Label>Name</Form.Label>
-              <Form.Control
-                type="text"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                required
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Description</Form.Label>
-              <Form.Control
-                type="text"
-                value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
-              />
-            </Form.Group>
+            Are you sure you want to delete the category "<strong>{categoryToDelete?.name}</strong>"? This cannot be undone.
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowEditModal(false)}>Cancel</Button>
-            <Button variant="primary" type="submit">Save Changes</Button>
+            <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
+            <Button variant="danger" onClick={handleDelete}>Delete</Button>
           </Modal.Footer>
-        </Form>
-      </Modal>
-
-      {/* Delete Confirmation Modal */}
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Confirm Delete</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Are you sure you want to delete the category "<strong>{categoryToDelete?.name}</strong>"? This cannot be undone.
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
-          <Button variant="danger" onClick={handleDelete}>Delete</Button>
-        </Modal.Footer>
-      </Modal>
+        </Modal>
+      )}
     </Container>
   );
 };

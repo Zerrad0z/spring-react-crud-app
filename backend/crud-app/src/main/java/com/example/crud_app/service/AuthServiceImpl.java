@@ -29,10 +29,10 @@ public class AuthServiceImpl implements AuthService {
             throw new InvalidCredentialsException("Invalid credentials");
         }
 
-        // 3. Generate JWT token
-        String token = jwtUtils.generateToken(user.getUsername());
+        // 3. Generate JWT token with role
+        String token = jwtUtils.generateToken(user.getUsername(), user.getRole().name());
 
-        // 4. Return response DTO
-        return new AuthResponse(token, user.getUsername());
+        // 4. Return response DTO with role
+        return new AuthResponse(token, user.getUsername(), user.getRole());
     }
 }
