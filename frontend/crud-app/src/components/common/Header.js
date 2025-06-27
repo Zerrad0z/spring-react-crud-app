@@ -13,7 +13,8 @@ const Header = () => {
     navigate('/login');
   };
 
-  if (!isAuthenticated) {
+  // Call isAuthenticated as a function
+  if (!isAuthenticated()) {
     return null; 
   }
 
@@ -28,8 +29,8 @@ const Header = () => {
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
             {/* Only show Dashboard link for admin users */}
-            {isAdmin && (
-              <Nav.Link as={Link} to="/">
+            {isAdmin() && (
+              <Nav.Link as={Link} to="/dashboard">
                 <i className="bi bi-house me-1"></i>
                 Dashboard
               </Nav.Link>
@@ -48,7 +49,7 @@ const Header = () => {
             <Navbar.Text className="me-3">
               <i className="bi bi-person-circle me-1"></i>
               {user?.username} 
-              <span className={`badge ms-2 ${isAdmin ? 'bg-danger' : 'bg-secondary'}`}>
+              <span className={`badge ms-2 ${isAdmin() ? 'bg-danger' : 'bg-secondary'}`}>
                 {user?.role}
               </span>
             </Navbar.Text>

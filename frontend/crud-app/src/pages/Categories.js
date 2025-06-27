@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Form, Button, Table, Row, Col, Modal, ButtonGroup, InputGroup } from 'react-bootstrap';
+import { Container, Card, Form, Button, Table, Row, Col, Modal, ButtonGroup, InputGroup, Alert } from 'react-bootstrap';
 import { categoryService } from '../services/categoryService';
 import { isAdmin } from '../services/authService';
 
@@ -16,16 +16,15 @@ const Categories = () => {
     currentPage: 0
   });
 
-  // Role-based access control
+  const [error, setError] = useState('');
+  const [editError, setEditError] = useState('');
   const userIsAdmin = isAdmin();
 
-  // Edit modal state
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
 
-  // Delete modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
 
@@ -83,30 +82,59 @@ const Categories = () => {
     setFilteredCategories(categories);
   };
 
+  const isValidCategoryName = (name) => /^[A-Za-z\s]+$/.test(name);
+
+
+const getErrorMessage = (error) => {
+  // Handle ErrorResponse structure from backend
+  if (error.response?.data?.message) {
+    return error.response.data.message;
+  }
+  
+  // Handle string responses (fallback)
+  if (typeof error.response?.data === 'string') {
+    return error.response.data;
+  }
+  
+  // Handle direct error message
+  if (error.message) {
+    return error.message;
+  }
+  
+  // Default fallback
+  return 'An unexpected error occurred';
+};
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim() || !userIsAdmin) return;
+
+    if (!isValidCategoryName(name.trim())) {
+      setError('Category name must contain only letters and spaces.');
+      return;
+    }
+
+    setError('');
 
     try {
       const newCategory = await categoryService.createCategory({
         name: name.trim(),
         description: description.trim()
       });
-      
+
       const updatedCategories = [...categories, newCategory];
       setCategories(updatedCategories);
-      
-      // Update filtered categories if the new category matches the search term
-      if (searchTerm.trim() === '' || 
-          newCategory.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+
+      if (searchTerm.trim() === '' ||
+        newCategory.name.toLowerCase().includes(searchTerm.toLowerCase())) {
         setFilteredCategories(prev => [...prev, newCategory]);
       }
-      
+
       setName('');
       setDescription('');
     } catch (err) {
       console.error(err);
-      alert('Failed to create category: ' + err.message);
+      setError(getErrorMessage(err));
     }
   };
 
@@ -115,12 +143,20 @@ const Categories = () => {
     setEditingCategory(category);
     setEditName(category.name);
     setEditDescription(category.description || '');
+    setEditError('');
     setShowEditModal(true);
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     if (!editName.trim() || !userIsAdmin) return;
+
+    if (!isValidCategoryName(editName.trim())) {
+      setEditError('Category name must contain only letters and spaces.');
+      return;
+    }
+
+    setEditError('');
 
     try {
       const updated = await categoryService.updateCategory(editingCategory.id, {
@@ -131,24 +167,18 @@ const Categories = () => {
       const updatedCategories = categories.map(c =>
         c.id === editingCategory.id ? updated : c
       );
-      
+
       setCategories(updatedCategories);
-      
-      if (searchTerm.trim() === '' || 
-          updated.name.toLowerCase().includes(searchTerm.toLowerCase())) {
-        setFilteredCategories(updatedCategories.filter(c => 
-          searchTerm.trim() === '' || 
-          c.name.toLowerCase().includes(searchTerm.toLowerCase())
-        ));
-      } else {
-        setFilteredCategories(prev => prev.filter(c => c.id !== editingCategory.id));
-      }
-      
+      setFilteredCategories(updatedCategories.filter(c =>
+        searchTerm.trim() === '' ||
+        c.name.toLowerCase().includes(searchTerm.toLowerCase())
+      ));
+
       setShowEditModal(false);
       setEditingCategory(null);
     } catch (err) {
       console.error(err);
-      alert('Failed to update category: ' + err.message);
+      setEditError(getErrorMessage(err));
     }
   };
 
@@ -180,7 +210,6 @@ const Categories = () => {
     <Container className="py-4">
       <h3 className="mb-4">Categories</h3>
 
-      {/* Search Bar */}
       <Card className="mb-4">
         <Card.Body>
           <Form onSubmit={handleSearch}>
@@ -191,23 +220,23 @@ const Categories = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <Button variant="outline-secondary" type="submit">
-                Search
-              </Button>
+              <Button variant="outline-secondary" type="submit">Search</Button>
               {searchTerm && (
-                <Button variant="outline-danger" onClick={handleClearSearch}>
-                  Clear
-                </Button>
+                <Button variant="outline-danger" onClick={handleClearSearch}>Clear</Button>
               )}
             </InputGroup>
           </Form>
         </Card.Body>
       </Card>
 
-      {/* Add Form - Only show for Admin */}
       {userIsAdmin && (
         <Card className="mb-4">
           <Card.Body>
+            {error && (
+              <Alert variant="danger" dismissible onClose={() => setError('')}>
+                {error}
+              </Alert>
+            )}
             <Form onSubmit={handleSubmit}>
               <Row>
                 <Col md={4}>
@@ -215,7 +244,10 @@ const Categories = () => {
                     type="text"
                     placeholder="Category name"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e) => {
+                      const input = e.target.value;
+                      if (/^[A-Za-z\s]*$/.test(input)) setName(input);
+                    }}
                     required
                   />
                 </Col>
@@ -228,9 +260,7 @@ const Categories = () => {
                   />
                 </Col>
                 <Col md={4}>
-                  <Button type="submit" variant="primary">
-                    Add Category
-                  </Button>
+                  <Button type="submit" variant="primary">Add Category</Button>
                 </Col>
               </Row>
             </Form>
@@ -238,7 +268,6 @@ const Categories = () => {
         </Card>
       )}
 
-      {/* Categories Table */}
       <Card>
         <Card.Body>
           <Table striped hover responsive>
@@ -279,7 +308,7 @@ const Categories = () => {
         </Card.Body>
       </Card>
 
-      {/* Edit Modal - Only for Admin */}
+      {/* Edit Modal */}
       {userIsAdmin && (
         <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
           <Form onSubmit={handleEditSubmit}>
@@ -287,12 +316,20 @@ const Categories = () => {
               <Modal.Title>Edit Category</Modal.Title>
             </Modal.Header>
             <Modal.Body>
+              {editError && (
+                <Alert variant="danger" dismissible onClose={() => setEditError('')}>
+                  {editError}
+                </Alert>
+              )}
               <Form.Group className="mb-3">
                 <Form.Label>Name</Form.Label>
                 <Form.Control
                   type="text"
                   value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
+                  onChange={(e) => {
+                    const input = e.target.value;
+                    if (/^[A-Za-z\s]*$/.test(input)) setEditName(input);
+                  }}
                   required
                 />
               </Form.Group>
@@ -313,14 +350,14 @@ const Categories = () => {
         </Modal>
       )}
 
-      {/* Delete Confirmation Modal - Only for Admin */}
+      {/* Delete Modal */}
       {userIsAdmin && (
         <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
           <Modal.Header closeButton>
             <Modal.Title>Confirm Delete</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            Are you sure you want to delete the category "<strong>{categoryToDelete?.name}</strong>"? This cannot be undone.
+            Are you sure you want to delete the category "<strong>{categoryToDelete?.name}</strong>"?
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>Cancel</Button>

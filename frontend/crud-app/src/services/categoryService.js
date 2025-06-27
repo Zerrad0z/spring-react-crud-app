@@ -1,6 +1,22 @@
 import api from './api';
 import { API_ENDPOINTS } from '../utils/constants';
 
+// Helper function to extract error message from ErrorResponse
+const getErrorMessage = (error) => {
+
+  if (error.response?.data?.message) {
+    return error.response.data.message;
+  }
+  
+  // Fallback for string responses
+  if (typeof error.response?.data === 'string') {
+    return error.response.data;
+  }
+  
+  // Default fallback
+  return error.message || 'An unexpected error occurred';
+};
+
 export const categoryService = {
   /*
    * Get all categories
@@ -21,7 +37,7 @@ export const categoryService = {
       return [];
     } catch (error) {
       console.error('Failed to fetch categories:', error);
-      throw new Error('Failed to fetch categories');
+      throw new Error(getErrorMessage(error));
     }
   },
 
@@ -31,7 +47,7 @@ export const categoryService = {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch paginated categories:', error);
-      throw new Error('Failed to fetch categories');
+      throw new Error(getErrorMessage(error));
     }
   },
 
@@ -47,11 +63,8 @@ export const categoryService = {
       const response = await api.get(`${API_ENDPOINTS.CATEGORIES}/${id}`);
       return response.data;
     } catch (error) {
-      if (error.response?.status === 404) {
-        throw new Error('Category not found');
-      }
       console.error(`Failed to fetch category ${id}:`, error);
-      throw new Error('Failed to fetch category');
+      throw new Error(getErrorMessage(error));
     }
   },
 
@@ -67,11 +80,8 @@ export const categoryService = {
       const response = await api.get(`${API_ENDPOINTS.CATEGORIES}/${id}/products`);
       return response.data;
     } catch (error) {
-      if (error.response?.status === 404) {
-        throw new Error('Category not found');
-      }
       console.error(`Failed to fetch category ${id} with products:`, error);
-      throw new Error('Failed to fetch category with products');
+      throw new Error(getErrorMessage(error));
     }
   },
 
@@ -92,18 +102,8 @@ export const categoryService = {
       const response = await api.post(API_ENDPOINTS.CATEGORIES, payload);
       return response.data;
     } catch (error) {
-      if (error.response?.status === 400) {
-        const message = error.response.data?.message || 'Invalid category data';
-        throw new Error(message);
-      }
-      if (error.response?.status === 409) {
-        throw new Error('Category with this name already exists');
-      }
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      }
       console.error('Failed to create category:', error);
-      throw new Error('Failed to create category');
+      throw new Error(getErrorMessage(error));
     }
   },
 
@@ -127,21 +127,8 @@ export const categoryService = {
       const response = await api.put(`${API_ENDPOINTS.CATEGORIES}/${id}`, payload);
       return response.data;
     } catch (error) {
-      if (error.response?.status === 404) {
-        throw new Error('Category not found');
-      }
-      if (error.response?.status === 400) {
-        const message = error.response.data?.message || 'Invalid category data';
-        throw new Error(message);
-      }
-      if (error.response?.status === 409) {
-        throw new Error('Category with this name already exists');
-      }
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      }
       console.error(`Failed to update category ${id}:`, error);
-      throw new Error('Failed to update category');
+      throw new Error(getErrorMessage(error));
     }
   },
 
@@ -156,17 +143,8 @@ export const categoryService = {
     try {
       await api.delete(`${API_ENDPOINTS.CATEGORIES}/${id}`);
     } catch (error) {
-      if (error.response?.status === 404) {
-        throw new Error('Category not found');
-      }
-      if (error.response?.status === 409) {
-        throw new Error('Cannot delete category with existing products');
-      }
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      }
       console.error(`Failed to delete category ${id}:`, error);
-      throw new Error('Failed to delete category');
+      throw new Error(getErrorMessage(error));
     }
   },
 
@@ -182,18 +160,16 @@ export const categoryService = {
   },
 
  /**
-   * Search category
+   * Search category - Fixed typo in URL
    */
   async searchCategory(name, params = {}){
     try{
       const searchParams = {...params, name};
-      const response = await api.get(`${API_ENDPOINTS.CATEGORIES}/seach`, {params: searchParams});
+      const response = await api.get(`${API_ENDPOINTS.CATEGORIES}/search`, {params: searchParams});
       return response.data;
     } catch (error) {
-      if(error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      }
-      throw new Error('Failed to search category');
+      console.error('Failed to search category:', error);
+      throw new Error(getErrorMessage(error));
     }
   }
 };

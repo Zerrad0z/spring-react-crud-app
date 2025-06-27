@@ -6,6 +6,8 @@ import com.example.crud_app.dto.ProductUpdateDTO;
 import com.example.crud_app.entity.Category;
 import com.example.crud_app.entity.Product;
 import com.example.crud_app.exception.CategoryNotFoundException;
+import com.example.crud_app.exception.DuplicateCategoryNameException;
+import com.example.crud_app.exception.DuplicateProductNameException;
 import com.example.crud_app.exception.ProductNotFoundException;
 import com.example.crud_app.mapper.ProductMapper;
 import com.example.crud_app.repository.CategoryRepository;
@@ -71,6 +73,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     @Override
     public ProductDTO createProduct(ProductCreateDTO createDTO){
+        validateProductName(createDTO.name(), null);
         Category category = findCategoryById(createDTO.categoryId());
         Product product = productMapper.toEntity(createDTO);
         product.setCategory(category);
@@ -85,6 +88,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDTO updateProduct(Long id, ProductUpdateDTO updateDTO){
         Product product = findProductById(id);
+        validateProductName(updateDTO.name(), id);
         Category category = findCategoryById(updateDTO.categoryId());
         productMapper.updateEntity(product, updateDTO);
         product.setCategory(category);
@@ -110,5 +114,17 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Page<ProductDTO> searchProduct(String name, BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable){
         return productRepository.searchProducts(name,minPrice,maxPrice,pageable).map(productMapper::toDTO);
+    }
+
+    /*
+     * Validate that category name is unique
+     */
+    private void validateProductName(String name, Long excludeId){
+        boolean exists = (excludeId == null)
+                ? productRepository.existsByName(name)
+                : productRepository.existsByNameAndIdNot(name, excludeId);
+        if (exists) {
+            throw new DuplicateProductNameException("Product with name'"+ name + "' already exists");
+        }
     }
 }

@@ -31,7 +31,7 @@ public interface CategoryService {
      * Create a new category
      */
     @Transactional
-    CategoryDTO creaCategory(CategoryCreateDTO createDTO);
+    CategoryDTO createCategory(CategoryCreateDTO createDTO);
 
     /*
      * Update an existing category

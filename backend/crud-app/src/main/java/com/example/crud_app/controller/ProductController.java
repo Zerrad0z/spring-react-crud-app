@@ -4,6 +4,7 @@ import com.example.crud_app.dto.ProductCreateDTO;
 import com.example.crud_app.dto.ProductDTO;
 import com.example.crud_app.dto.ProductUpdateDTO;
 import com.example.crud_app.service.ProductService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +21,9 @@ public class ProductController {
 
     private final ProductService productService;
 
+    /*
+     * Get all products with pagination
+     */
     @GetMapping
     public Page<ProductDTO> getAllProducts(Pageable pageable){
         return productService.getAllProducts(pageable);
@@ -44,10 +48,11 @@ public class ProductController {
 
     /*
      * Create a new product
+     * POST /api/v1/products
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ProductDTO createProduct(@RequestBody ProductCreateDTO createDTO){
+    public ProductDTO createProduct(@Valid @RequestBody ProductCreateDTO createDTO){
         return productService.createProduct(createDTO);
     }
 
@@ -57,7 +62,7 @@ public class ProductController {
      */
     @PutMapping("/{id}")
     public ProductDTO updateProduct(@PathVariable Long id,
-                                    @RequestBody ProductUpdateDTO updateDTO){
+                                    @Valid @RequestBody ProductUpdateDTO updateDTO){
         return productService.updateProduct(id, updateDTO);
     }
 

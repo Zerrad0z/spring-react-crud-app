@@ -60,7 +60,8 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Transactional
     @Override
-    public CategoryDTO creaCategory(CategoryCreateDTO createDTO){
+    public CategoryDTO createCategory(CategoryCreateDTO createDTO){
+        validateCategoryName(createDTO.name(), null);
         Category category = categoryMapper.toEntity(createDTO);
         Category savedCategory = categoryRepository.save(category);
         return categoryMapper.toDTO(savedCategory);

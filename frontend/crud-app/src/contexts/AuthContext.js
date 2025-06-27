@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { login as apiLogin, logout as apiLogout, getCurrentUser, isAuthenticated } from '../services/authService';
+import { login as apiLogin, logout as apiLogout, getCurrentUser, isAuthenticated as checkAuth, isAdmin as checkAdmin } from '../services/authService';
 
 const AuthContext = createContext();
 
@@ -17,8 +17,10 @@ export function AuthProvider({ children }) {
 
   const login = async (credentials) => {
     const userData = await apiLogin(credentials);
+    // Set the complete user data including role
     setCurrentUser({
-      username: userData.username
+      username: userData.username,
+      role: userData.role
     });
     return userData;
   };
@@ -30,9 +32,11 @@ export function AuthProvider({ children }) {
 
   const authValue = {
     currentUser,
+    user: currentUser,
     login,
     logout,
-    isAuthenticated: isAuthenticated()
+    isAuthenticated: () => checkAuth(),
+    isAdmin: () => checkAdmin()
   };
 
   return (
