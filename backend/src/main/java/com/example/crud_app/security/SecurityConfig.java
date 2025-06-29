@@ -35,6 +35,16 @@ public class SecurityConfig {
                         // Public endpoints
                         .requestMatchers("/api/v1/auth/login").permitAll()
 
+                        // Swagger UI endpoints
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**",
+                                "/v3/api-docs.yaml",
+                                "/swagger-resources/**",
+                                "/webjars/**"
+                        ).permitAll()
+
                         // READ operations - accessible to both USER and ADMIN
                         .requestMatchers("GET", "/api/v1/categories").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("GET", "/api/v1/categories/**").hasAnyRole("USER", "ADMIN")
@@ -58,6 +68,7 @@ public class SecurityConfig {
         return http.build();
     }
 
+    // Cors configuration
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

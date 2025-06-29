@@ -133,7 +133,7 @@ export const productService = {
   },
 
   /**
-   * Search product - Fixed typo in URL
+   * Search product
    */
   async searchProduct(name, params = {}) {
     try {

@@ -160,7 +160,7 @@ export const categoryService = {
   },
 
  /**
-   * Search category - Fixed typo in URL
+   * Search category 
    */
   async searchCategory(name, params = {}){
     try{

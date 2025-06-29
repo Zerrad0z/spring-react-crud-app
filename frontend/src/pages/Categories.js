@@ -8,6 +8,7 @@ const Categories = () => {
   const [filteredCategories, setFilteredCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [pageInfo, setPageInfo] = useState({
     totalElements: 0,
     totalPages: 0,
@@ -35,6 +36,16 @@ const Categories = () => {
   // Delete confirmation state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
+
+  // Auto-hide success message after 5 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage('');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   useEffect(() => {
     // Check admin status when component mounts and update state
@@ -144,6 +155,12 @@ const Categories = () => {
       return;
     }
 
+    // Show success message
+    setSuccessMessage(`Category "${addName.trim()}" has been successfully added!`);
+      
+    // Clear any existing errors
+    setError('');
+
     setModalError('');
 
     try {
@@ -206,7 +223,15 @@ const Categories = () => {
       ));
 
       setShowEditModal(false);
+      const categoryName = editingCategory.name;
       setEditingCategory(null);
+
+      // Show success message
+      setSuccessMessage(`Category "${categoryName}" has been successfully updated!`);
+      
+      // Clear any existing errors
+      setError('');
+
     } catch (err) {
       console.error(err);
       setModalError(getErrorMessage(err));
@@ -223,12 +248,20 @@ const Categories = () => {
     if (!categoryToDelete || !userIsAdmin) return;
 
     try {
+      const categorytName = categoryToDelete.name;
       await categoryService.deleteCategory(categoryToDelete.id);
       const updatedCategories = categories.filter(c => c.id !== categoryToDelete.id);
       setCategories(updatedCategories);
       setFilteredCategories(prev => prev.filter(c => c.id !== categoryToDelete.id));
       setShowDeleteModal(false);
       setCategoryToDelete(null);
+
+      // Show success message
+      setSuccessMessage(`Category "${categorytName}" has been successfully deleted!`);
+      
+      // Clear any existing errors
+      setError('');
+
     } catch (err) {
       console.error(err);
       setError('Failed to delete category: ' + getErrorMessage(err));
@@ -251,6 +284,14 @@ const Categories = () => {
           </Col>
         )}
       </Row>
+
+      {/* Success Message Alert */}
+      {successMessage && (
+        <Alert variant="success" dismissible onClose={() => setSuccessMessage('')} className="mb-4">
+          <i className="bi bi-check-circle me-2"></i>
+          {successMessage}
+        </Alert>
+      )}
 
       {/* Global Error Alert */}
       {error && (

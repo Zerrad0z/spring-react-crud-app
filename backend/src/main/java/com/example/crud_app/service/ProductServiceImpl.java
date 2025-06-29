@@ -6,7 +6,6 @@ import com.example.crud_app.dto.ProductUpdateDTO;
 import com.example.crud_app.entity.Category;
 import com.example.crud_app.entity.Product;
 import com.example.crud_app.exception.CategoryNotFoundException;
-import com.example.crud_app.exception.DuplicateCategoryNameException;
 import com.example.crud_app.exception.DuplicateProductNameException;
 import com.example.crud_app.exception.ProductNotFoundException;
 import com.example.crud_app.mapper.ProductMapper;

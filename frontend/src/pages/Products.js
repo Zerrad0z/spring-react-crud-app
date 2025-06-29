@@ -21,6 +21,7 @@ const Products = () => {
   // Error states
   const [error, setError] = useState('');
   const [modalError, setModalError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   
   // Role-based access control
   const [userIsAdmin, setUserIsAdmin] = useState(false);
@@ -41,6 +42,16 @@ const Products = () => {
   // Delete confirmation state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
+
+  // Auto-hide success message after 5 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage('');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   useEffect(() => {
     // Check admin status when component mounts and update state
@@ -222,6 +233,12 @@ const Products = () => {
       setAddName('');
       setAddPrice('');
       setAddCategoryId('');
+
+      // Show success message
+      setSuccessMessage(`Product "${addName.trim()}" has been successfully added!`);
+
+      // Clear any existing errors
+      setError('');
       
       // Reload data to reflect changes
       loadData();
@@ -262,7 +279,14 @@ const Products = () => {
       });
       
       setShowEditModal(false);
+      const productName = editingProduct.name;
       setEditingProduct(null);
+
+      // Show success message
+      setSuccessMessage(`Product "${productName}" has been successfully updated!`);
+      
+      // Clear any existing errors
+      setError('');
       
       // Reload data to reflect changes
       loadData();
@@ -297,9 +321,16 @@ const Products = () => {
     if (!productToDelete || !userIsAdmin) return;
 
     try {
+      const productName = productToDelete.name;
       await productService.deleteProduct(productToDelete.id);
       setShowDeleteModal(false);
       setProductToDelete(null);
+
+      // Show success message
+      setSuccessMessage(`Product "${productName}" has been successfully deleted!`);
+      
+      // Clear any existing errors
+      setError('');
       
       // Reload data to reflect changes
       loadData();
@@ -401,6 +432,13 @@ const Products = () => {
           </Col>
         )}
       </Row>
+      {/* Success Message Alert */}
+      {successMessage && (
+        <Alert variant="success" dismissible onClose={() => setSuccessMessage('')} className="mb-4">
+          <i className="bi bi-check-circle me-2"></i>
+          {successMessage}
+        </Alert>
+      )}
       
       {/* Global Error Alert */}
       {error && (

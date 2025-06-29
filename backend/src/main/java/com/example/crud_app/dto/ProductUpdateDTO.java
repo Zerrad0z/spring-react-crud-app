@@ -10,6 +10,8 @@ import java.math.BigDecimal;
 public record ProductUpdateDTO(
         @NotBlank(message = "Product name is required")
         String name,
+        @NotBlank(message = "Price is required")
         BigDecimal price,
+        @NotBlank(message = "Category is required")
         Long categoryId
 ) {}

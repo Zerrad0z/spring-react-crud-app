@@ -13,7 +13,6 @@ const Header = () => {
     navigate('/login');
   };
 
-  // Call isAuthenticated as a function
   if (!isAuthenticated()) {
     return null; 
   }
